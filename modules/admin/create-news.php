@@ -209,7 +209,24 @@ include '../../includes/admin-header.php';
     </form>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
 <script>
+document.addEventListener("DOMContentLoaded", function() {
+    tinymce.init({
+        selector: '#contenido',
+        height: 420,
+        language: 'es',
+        plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
+        toolbar: 'undo redo | blocks | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link image table | code preview',
+        content_style: 'body { font-family: Poppins, Helvetica, Arial, sans-serif; font-size:14px }',
+        setup: function(editor) {
+            editor.on('change', function() {
+                editor.save();
+            });
+        }
+    });
+});
+
 function extractYTId(url) {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
