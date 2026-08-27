@@ -33,6 +33,13 @@
             </a>
         </li>
         
+        <li>
+            <a href="/modules/public/news.php" 
+               class="<?php echo in_array(basename($_SERVER['PHP_SELF']), ['news.php', 'view-news.php']) ? 'active' : ''; ?>">
+                <i class="fas fa-newspaper"></i> Noticias
+            </a>
+        </li>
+        
 
 
 

@@ -26,6 +26,11 @@ $anuncios = $db->query($query_ads)->fetch_all(MYSQLI_ASSOC);
 $query_fotos = "SELECT url_foto FROM fotos ORDER BY RAND() LIMIT 3";
 $fotos_collage = $db->query($query_fotos)->fetch_all(MYSQLI_ASSOC);
 
+// Obtener últimas 3 noticias publicadas
+$query_noticias = "SELECT * FROM noticias WHERE estado = 'publicado' ORDER BY fecha_publicacion DESC, creado_en DESC LIMIT 3";
+$result_noticias = $db->query($query_noticias);
+$noticias_home = $result_noticias ? $result_noticias->fetch_all(MYSQLI_ASSOC) : [];
+
 // Obtener total de corredores registrados
 $query_corredores = "SELECT COUNT(*) as total FROM usuarios WHERE tipo_usuario = 'corredor'";
 $total_corredores = $db->query($query_corredores)->fetch_assoc()['total'];
@@ -258,6 +263,71 @@ include '../../includes/header.php';
         </div>
         <?php endif; ?>
     </div>
+
+    <?php if (!empty($noticias_home)): ?>
+    <!-- Sección de Novedades y Videos -->
+    <div class="news-section" style="margin-top: 3rem; margin-bottom: 3rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h2 class="section-title" style="margin-bottom: 0.3rem; text-align: left;">Novedades & Videos Fit5K</h2>
+                <p style="color: #6c757d; margin: 0;">Mantente al día con nuestros últimos artículos, rutinas y coberturas en video.</p>
+            </div>
+            <a href="news.php" class="btn btn-outline" style="border-radius: 20px; font-weight: 500;">
+                Ver Todas las Noticias <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="news-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+            <?php foreach ($noticias_home as $noticia): ?>
+            <div class="news-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); transition: transform 0.3s ease, box-shadow 0.3s ease; display: flex; flex-direction: column;">
+                
+                <div class="news-media" style="position: relative; height: 190px; overflow: hidden; background: #2a004a;">
+                    <?php if (!empty($noticia['youtube_id'])): ?>
+                        <iframe src="https://www.youtube.com/embed/<?php echo htmlspecialchars($noticia['youtube_id']); ?>" style="width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
+                    <?php elseif (!empty($noticia['imagen_destacada'])): ?>
+                        <img src="../../<?php echo htmlspecialchars($noticia['imagen_destacada']); ?>" alt="<?php echo htmlspecialchars($noticia['titulo']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                    <?php else: ?>
+                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffcc80;">
+                            <i class="fas fa-newspaper fa-3x"></i>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($noticia['youtube_id'])): ?>
+                        <span style="position: absolute; top: 10px; right: 10px; background: #ff0000; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 4px; pointer-events: none;">
+                            <i class="fab fa-youtube"></i> Video
+                        </span>
+                    <?php endif; ?>
+                </div>
+
+                <div class="news-body" style="padding: 1.2rem; display: flex; flex-direction: column; flex: 1;">
+                    <div style="font-size: 0.8rem; color: #888; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 12px;">
+                        <span><i class="far fa-calendar-alt"></i> <?php echo date('d/m/Y', strtotime($noticia['creado_en'])); ?></span>
+                        <span><i class="far fa-eye"></i> <?php echo number_format($noticia['visitas']); ?> lecturas</span>
+                    </div>
+
+                    <h3 style="font-size: 1.15rem; font-weight: 600; margin: 0 0 0.6rem 0; line-height: 1.4;">
+                        <a href="view-news.php?slug=<?php echo htmlspecialchars($noticia['slug']); ?>" style="color: #2a004a; text-decoration: none; transition: color 0.2s;">
+                            <?php echo htmlspecialchars($noticia['titulo']); ?>
+                        </a>
+                    </h3>
+
+                    <?php if (!empty($noticia['resumen'])): ?>
+                        <p style="color: #666; font-size: 0.9rem; line-height: 1.5; margin: 0 0 1.2rem 0; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                            <?php echo htmlspecialchars($noticia['resumen']); ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <div style="margin-top: auto; padding-top: 0.5rem; border-top: 1px solid #f0f0f0;">
+                        <a href="view-news.php?slug=<?php echo htmlspecialchars($noticia['slug']); ?>" style="color: var(--primary-color, #6a0dad); text-decoration: none; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px;">
+                            Leer Artículo Completo <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <?php if (!empty($anuncios)): ?>

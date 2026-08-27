@@ -15,6 +15,7 @@
                 <ul>
                     <li><a href="/modules/public/home.php">Inicio</a></li>
                     <li><a href="/modules/events/index.php">Eventos</a></li>
+                    <li><a href="/modules/public/news.php">Noticias & Blog</a></li>
                     <li><a href="/modules/public/about.php">Nosotros</a></li>
                     <li><a href="/modules/public/contact.php">Contacto</a></li>
                 </ul>
