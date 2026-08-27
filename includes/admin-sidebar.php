@@ -61,6 +61,13 @@
         </li>
 
         <li>
+            <a href="news.php" class="<?php echo in_array(basename($_SERVER['PHP_SELF']), ['news.php', 'create-news.php', 'edit-news.php']) ? 'active' : ''; ?>">
+                <i class="fas fa-newspaper"></i>
+                <span>Noticias / Blog</span>
+            </a>
+        </li>
+
+        <li>
             <a href="ads.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'ads.php' || basename($_SERVER['PHP_SELF']) === 'create-ad.php' || basename($_SERVER['PHP_SELF']) === 'edit-ad.php' ? 'active' : ''; ?>">
                 <i class="fas fa-ad"></i>
                 <span>Anuncios</span>
