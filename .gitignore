@@ -1,0 +1,17 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Uploads directory contents (preserve directory structure)
+uploads/*
+!uploads/.gitkeep
+!uploads/*/
+!uploads/*/.gitkeep
+
+# Temporary files
+*.tmp
+*.log

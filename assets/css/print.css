@@ -1,0 +1,95 @@
+/* assets/css/print.css */
+@media print {
+
+    /* Hide EVERYTHING by default */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Only show the admin-main container content but refined */
+    .admin-main,
+    .admin-main * {
+        visibility: visible;
+    }
+
+    /* Hide specific non-table elements within admin-main */
+    .admin-sidebar,
+    .admin-header,
+    .admin-stats,
+    .admin-filters,
+    .admin-pagination,
+    .action-buttons,
+    .admin-alert,
+    .table-actions,
+    .btn,
+    .btn-icon,
+    .admin-btn,
+    button,
+    footer,
+    .admin-footer,
+    #remove_promo,
+    .table-footer,
+    .export-card,
+    /* Hide the export card itself */
+    .admin-header-actions,
+    form,
+    .empty-state a {
+        display: none !important;
+        visibility: hidden !important;
+        /* Ensure visibility hidden too */
+    }
+
+    /* Fix Main Content Layout */
+    .admin-main {
+        position: absolute;
+        left: 0;
+        top: 0;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        min-height: auto !important;
+        background: white !important;
+    }
+
+    /* Target the Card containing the table */
+    .admin-card {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Ensure Table is readable */
+    .admin-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 10pt !important;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        border: 1px solid #ccc !important;
+        padding: 6px !important;
+        color: black !important;
+        visibility: visible !important;
+        /* Force table content visible */
+    }
+
+    .admin-table th {
+        background-color: #eee !important;
+        font-weight: bold !important;
+    }
+
+    /* Hide Actions Column if present */
+    .admin-table th:last-child,
+    .admin-table td:last-child {
+        display: none !important;
+    }
+
+    /* Document Setup */
+    @page {
+        margin: 1cm;
+        size: landscape;
+    }
+}
