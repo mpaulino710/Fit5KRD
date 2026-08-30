@@ -94,14 +94,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        $posicion_imagen = trim($_POST['posicion_imagen'] ?? ($noticia['posicion_imagen'] ?? 'center 50%'));
+        if (empty($posicion_imagen)) {
+            $posicion_imagen = 'center 50%';
+        }
+
         if (empty($error)) {
             $fecha_publicacion = $noticia['fecha_publicacion'];
             if ($estado === 'publicado' && empty($fecha_publicacion)) {
                 $fecha_publicacion = date('Y-m-d H:i:s');
             }
 
-            $stmt = $db->prepare("UPDATE noticias SET titulo = ?, resumen = ?, contenido = ?, imagen_destacada = ?, video_url = ?, youtube_id = ?, estado = ?, fecha_publicacion = ? WHERE id = ?");
-            $stmt->bind_param("ssssssssi", $titulo, $resumen, $contenido, $imagen_destacada, $video_url, $youtube_id, $estado, $fecha_publicacion, $id);
+            $stmt = $db->prepare("UPDATE noticias SET titulo = ?, resumen = ?, contenido = ?, imagen_destacada = ?, posicion_imagen = ?, video_url = ?, youtube_id = ?, estado = ?, fecha_publicacion = ? WHERE id = ?");
+            $stmt->bind_param("sssssssssi", $titulo, $resumen, $contenido, $imagen_destacada, $posicion_imagen, $video_url, $youtube_id, $estado, $fecha_publicacion, $id);
 
             if ($stmt->execute()) {
                 $stmt->close();
@@ -199,24 +204,77 @@ include '../../includes/admin-header.php';
                 <div class="admin-card">
                     <h3 style="margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;"><i class="fas fa-image"></i> Imagen Destacada</h3>
                     
-                    <?php if (!empty($noticia['imagen_destacada'])): ?>
-                        <div style="margin-bottom: 1rem; text-align: center;">
-                            <img src="../../<?php echo htmlspecialchars($noticia['imagen_destacada']); ?>" alt="Imagen actual" style="max-width: 100%; max-height: 160px; border-radius: 6px; object-fit: cover; margin-bottom: 0.5rem;">
-                            <label style="display: block; font-size: 0.85rem; color: #dc3545; cursor: pointer;">
-                                <input type="checkbox" name="remove_image" value="1"> Eliminar imagen actual
+                    <?php 
+                    $has_existing_img = !empty($noticia['imagen_destacada']);
+                    $current_pos = $noticia['posicion_imagen'] ?? 'center 50%';
+                    $initial_slider_val = 50;
+                    if (preg_match('/(\d+)%/', $current_pos, $m)) {
+                        $initial_slider_val = intval($m[1]);
+                    } elseif (strpos($current_pos, 'top') !== false) {
+                        $initial_slider_val = 0;
+                    } elseif (strpos($current_pos, 'bottom') !== false) {
+                        $initial_slider_val = 100;
+                    }
+                    ?>
+
+                    <?php if ($has_existing_img): ?>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-size: 0.85rem; color: #dc3545; cursor: pointer; margin-bottom: 0.8rem;">
+                                <input type="checkbox" name="remove_image" value="1" onchange="toggleExistingImage(this)"> Eliminar imagen actual
                             </label>
                         </div>
                     <?php endif; ?>
 
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; margin-bottom: 0.4rem; font-weight: 500;">
-                            <?php echo !empty($noticia['imagen_destacada']) ? 'Reemplazar imagen:' : 'Subir imagen:'; ?>
+                            <?php echo $has_existing_img ? 'Reemplazar imagen:' : 'Subir imagen:'; ?>
                         </label>
                         <input type="file" id="imagen_destacada" name="imagen_destacada" accept="image/*" class="form-control" style="width: 100%;" onchange="previewImage(this)">
                     </div>
 
-                    <div id="image-preview-container" style="margin-top: 1rem; display: none; text-align: center;">
-                        <img id="image-preview" src="#" alt="Previsualización" style="max-width: 100%; max-height: 180px; border-radius: 6px; object-fit: cover;">
+                    <!-- Hidden input to store chosen object-position -->
+                    <input type="hidden" id="posicion_imagen" name="posicion_imagen" value="<?php echo htmlspecialchars($current_pos); ?>">
+
+                    <!-- Image Preview & Crop Controller -->
+                    <div id="image-preview-container" style="margin-top: 1.2rem; <?php echo $has_existing_img ? 'display: block;' : 'display: none;'; ?>">
+                        <div style="font-size: 0.85rem; font-weight: 600; color: #2a004a; margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-eye"></i> Vista previa en Tarjeta del Home</span>
+                            <span id="pos-badge" style="background: #f3e9fd; color: #6a0dad; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                                <?php echo $initial_slider_val; ?>% <?php echo ($initial_slider_val <= 15) ? '(Arriba)' : (($initial_slider_val >= 85) ? '(Abajo)' : '(Centro)'); ?>
+                            </span>
+                        </div>
+
+                        <!-- Simulated Home Card Container (190px height) -->
+                        <div style="height: 190px; width: 100%; border-radius: 10px; overflow: hidden; background: #2a004a; position: relative; border: 2px dashed #9c27b0; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+                            <img id="image-preview" src="<?php echo $has_existing_img ? '../../' . htmlspecialchars($noticia['imagen_destacada']) : '#'; ?>" alt="Previsualización" style="width: 100%; height: 100%; object-fit: cover; object-position: <?php echo htmlspecialchars($current_pos); ?>;">
+                        </div>
+
+                        <!-- Focal Point Controls -->
+                        <div style="margin-top: 1rem; background: #fdfafc; padding: 0.8rem; border-radius: 8px; border: 1px solid #f0e6fa;">
+                            <label for="posicion_y_slider" style="display: block; font-size: 0.82rem; font-weight: 600; color: #444; margin-bottom: 0.3rem;">
+                                <i class="fas fa-arrows-alt-v" style="color: #6a0dad;"></i> Ajustar Altura / Encuadre Vertical:
+                            </label>
+                            
+                            <input type="range" id="posicion_y_slider" min="0" max="100" value="<?php echo $initial_slider_val; ?>" style="width: 100%; margin: 0.3rem 0; accent-color: #6a0dad; cursor: pointer;" oninput="updateImagePosition(this.value)">
+                            
+                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #777; margin-bottom: 0.6rem;">
+                                <span>Arriba (0%)</span>
+                                <span>Centro (50%)</span>
+                                <span>Abajo (100%)</span>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                                <button type="button" class="admin-btn admin-btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.78rem; justify-content: center;" onclick="setImagePosition(0)">
+                                    ⬆️ Arriba
+                                </button>
+                                <button type="button" class="admin-btn admin-btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.78rem; justify-content: center;" onclick="setImagePosition(50)">
+                                    🎯 Centro
+                                </button>
+                                <button type="button" class="admin-btn admin-btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.78rem; justify-content: center;" onclick="setImagePosition(100)">
+                                    ⬇️ Abajo
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -274,9 +332,44 @@ function previewImage(input) {
             container.style.display = 'block';
         }
         reader.readAsDataURL(input.files[0]);
-    } else {
-        container.style.display = 'none';
     }
+}
+
+function toggleExistingImage(chk) {
+    const container = document.getElementById('image-preview-container');
+    const fileInput = document.getElementById('imagen_destacada');
+    if (chk.checked && (!fileInput.files || !fileInput.files[0])) {
+        container.style.display = 'none';
+    } else {
+        container.style.display = 'block';
+    }
+}
+
+function updateImagePosition(val) {
+    val = parseInt(val, 10);
+    if (isNaN(val)) val = 50;
+    
+    const preview = document.getElementById('image-preview');
+    const inputHidden = document.getElementById('posicion_imagen');
+    const badge = document.getElementById('pos-badge');
+    const slider = document.getElementById('posicion_y_slider');
+    
+    slider.value = val;
+    inputHidden.value = 'center ' + val + '%';
+    if (preview) {
+        preview.style.objectPosition = 'center ' + val + '%';
+    }
+    
+    let label = val + '%';
+    if (val <= 15) label += ' (Arriba)';
+    else if (val >= 85) label += ' (Abajo)';
+    else if (val >= 40 && val <= 60) label += ' (Centro)';
+    
+    if (badge) badge.innerText = label;
+}
+
+function setImagePosition(val) {
+    updateImagePosition(val);
 }
 </script>
 

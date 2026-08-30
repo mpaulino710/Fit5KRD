@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS `noticias` (
   `resumen` TEXT NULL,
   `contenido` LONGTEXT NOT NULL,
   `imagen_destacada` VARCHAR(255) NULL,
+  `posicion_imagen` VARCHAR(50) DEFAULT 'center center',
   `video_url` VARCHAR(255) NULL,
   `youtube_id` VARCHAR(50) NULL,
   `estado` ENUM('borrador', 'publicado', 'archivado') DEFAULT 'publicado',

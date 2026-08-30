@@ -7,10 +7,11 @@ Thumbs.db
 .idea/
 
 # Uploads directory contents (preserve directory structure)
-uploads/*
+uploads/**/*
+!uploads/**/.gitkeep
 !uploads/.gitkeep
 !uploads/*/
-!uploads/*/.gitkeep
+!uploads/*/*/
 
 # Temporary files
 *.tmp

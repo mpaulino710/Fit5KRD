@@ -93,10 +93,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        $posicion_imagen = trim($_POST['posicion_imagen'] ?? 'center 50%');
+        if (empty($posicion_imagen)) {
+            $posicion_imagen = 'center 50%';
+        }
+
         if (empty($error)) {
             $fecha_publicacion = ($estado === 'publicado') ? date('Y-m-d H:i:s') : null;
-            $stmt = $db->prepare("INSERT INTO noticias (titulo, slug, resumen, contenido, imagen_destacada, video_url, youtube_id, estado, autor_id, fecha_publicacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssssssis", $titulo, $slug, $resumen, $contenido, $imagen_destacada, $video_url, $youtube_id, $estado, $autor_id, $fecha_publicacion);
+            $stmt = $db->prepare("INSERT INTO noticias (titulo, slug, resumen, contenido, imagen_destacada, posicion_imagen, video_url, youtube_id, estado, autor_id, fecha_publicacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssssssssis", $titulo, $slug, $resumen, $contenido, $imagen_destacada, $posicion_imagen, $video_url, $youtube_id, $estado, $autor_id, $fecha_publicacion);
 
             if ($stmt->execute()) {
                 $stmt->close();
@@ -200,8 +205,47 @@ include '../../includes/admin-header.php';
                         <small style="color: #6c757d; font-size: 0.8rem; display: block; margin-top: 0.3rem;">Formatos: JPG, PNG, WEBP. Máx 5MB.</small>
                     </div>
 
-                    <div id="image-preview-container" style="margin-top: 1rem; display: none; text-align: center;">
-                        <img id="image-preview" src="#" alt="Previsualización" style="max-width: 100%; max-height: 180px; border-radius: 6px; object-fit: cover;">
+                    <!-- Hidden input to store chosen object-position -->
+                    <input type="hidden" id="posicion_imagen" name="posicion_imagen" value="center 50%">
+
+                    <!-- Image Preview & Crop Controller -->
+                    <div id="image-preview-container" style="margin-top: 1.2rem; display: none;">
+                        <div style="font-size: 0.85rem; font-weight: 600; color: #2a004a; margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-eye"></i> Vista previa en Tarjeta del Home</span>
+                            <span id="pos-badge" style="background: #f3e9fd; color: #6a0dad; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">50% (Centro)</span>
+                        </div>
+
+                        <!-- Simulated Home Card Container (190px height) -->
+                        <div style="height: 190px; width: 100%; border-radius: 10px; overflow: hidden; background: #2a004a; position: relative; border: 2px dashed #9c27b0; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+                            <img id="image-preview" src="#" alt="Previsualización" style="width: 100%; height: 100%; object-fit: cover; object-position: center 50%;">
+                        </div>
+
+                        <!-- Focal Point Controls -->
+                        <div style="margin-top: 1rem; background: #fdfafc; padding: 0.8rem; border-radius: 8px; border: 1px solid #f0e6fa;">
+                            <label for="posicion_y_slider" style="display: block; font-size: 0.82rem; font-weight: 600; color: #444; margin-bottom: 0.3rem;">
+                                <i class="fas fa-arrows-alt-v" style="color: #6a0dad;"></i> Ajustar Altura / Encuadre Vertical:
+                            </label>
+                            
+                            <input type="range" id="posicion_y_slider" min="0" max="100" value="50" style="width: 100%; margin: 0.3rem 0; accent-color: #6a0dad; cursor: pointer;" oninput="updateImagePosition(this.value)">
+                            
+                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #777; margin-bottom: 0.6rem;">
+                                <span>Arriba (0%)</span>
+                                <span>Centro (50%)</span>
+                                <span>Abajo (100%)</span>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                                <button type="button" class="admin-btn admin-btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.78rem; justify-content: center;" onclick="setImagePosition(0)">
+                                    ⬆️ Arriba
+                                </button>
+                                <button type="button" class="admin-btn admin-btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.78rem; justify-content: center;" onclick="setImagePosition(50)">
+                                    🎯 Centro
+                                </button>
+                                <button type="button" class="admin-btn admin-btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.78rem; justify-content: center;" onclick="setImagePosition(100)">
+                                    ⬇️ Abajo
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -262,6 +306,33 @@ function previewImage(input) {
     } else {
         container.style.display = 'none';
     }
+}
+
+function updateImagePosition(val) {
+    val = parseInt(val, 10);
+    if (isNaN(val)) val = 50;
+    
+    const preview = document.getElementById('image-preview');
+    const inputHidden = document.getElementById('posicion_imagen');
+    const badge = document.getElementById('pos-badge');
+    const slider = document.getElementById('posicion_y_slider');
+    
+    slider.value = val;
+    inputHidden.value = 'center ' + val + '%';
+    if (preview) {
+        preview.style.objectPosition = 'center ' + val + '%';
+    }
+    
+    let label = val + '%';
+    if (val <= 15) label += ' (Arriba)';
+    else if (val >= 85) label += ' (Abajo)';
+    else if (val >= 40 && val <= 60) label += ' (Centro)';
+    
+    if (badge) badge.innerText = label;
+}
+
+function setImagePosition(val) {
+    updateImagePosition(val);
 }
 </script>
 

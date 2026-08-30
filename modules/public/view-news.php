@@ -36,7 +36,7 @@ $stmtUpdate->execute();
 $stmtUpdate->close();
 
 // Fetch Related / Recent Articles
-$stmtRelated = $db->prepare("SELECT id, titulo, slug, imagen_destacada, youtube_id, fecha_publicacion, creado_en FROM noticias WHERE estado = 'publicado' AND id != ? ORDER BY fecha_publicacion DESC LIMIT 4");
+$stmtRelated = $db->prepare("SELECT id, titulo, slug, imagen_destacada, posicion_imagen, youtube_id, fecha_publicacion, creado_en FROM noticias WHERE estado = 'publicado' AND id != ? ORDER BY fecha_publicacion DESC LIMIT 4");
 $stmtRelated->bind_param("i", $noticia['id']);
 $stmtRelated->execute();
 $relacionadas = $stmtRelated->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -95,7 +95,7 @@ $currentUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" 
                     </div>
                 <?php elseif (!empty($noticia['imagen_destacada'])): ?>
                     <div style="margin-bottom: 2rem; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.08);">
-                        <img src="../../<?php echo htmlspecialchars($noticia['imagen_destacada']); ?>" alt="<?php echo htmlspecialchars($noticia['titulo']); ?>" style="width: 100%; max-height: 480px; object-fit: cover; display: block;">
+                        <img src="../../<?php echo htmlspecialchars($noticia['imagen_destacada']); ?>" alt="<?php echo htmlspecialchars($noticia['titulo']); ?>" style="width: 100%; max-height: 480px; object-fit: cover; object-position: <?php echo !empty($noticia['posicion_imagen']) ? htmlspecialchars($noticia['posicion_imagen']) : 'center center'; ?>; display: block;">
                     </div>
                 <?php endif; ?>
 
@@ -142,7 +142,7 @@ $currentUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" 
                         <div style="display: flex; gap: 12px; align-items: center;">
                             <div style="width: 75px; height: 60px; border-radius: 8px; overflow: hidden; background: #2a004a; flex-shrink: 0; position: relative;">
                                 <?php if (!empty($rel['imagen_destacada'])): ?>
-                                    <img src="../../<?php echo htmlspecialchars($rel['imagen_destacada']); ?>" alt="Rel" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <img src="../../<?php echo htmlspecialchars($rel['imagen_destacada']); ?>" alt="Rel" style="width: 100%; height: 100%; object-fit: cover; object-position: <?php echo !empty($rel['posicion_imagen']) ? htmlspecialchars($rel['posicion_imagen']) : 'center center'; ?>;">
                                 <?php elseif (!empty($rel['youtube_id'])): ?>
                                     <img src="https://img.youtube.com/vi/<?php echo htmlspecialchars($rel['youtube_id']); ?>/mqdefault.jpg" alt="YT Thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
                                 <?php else: ?>

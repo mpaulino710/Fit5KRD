@@ -285,7 +285,7 @@ include '../../includes/header.php';
                     <?php if (!empty($noticia['youtube_id'])): ?>
                         <iframe src="https://www.youtube.com/embed/<?php echo htmlspecialchars($noticia['youtube_id']); ?>" style="width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
                     <?php elseif (!empty($noticia['imagen_destacada'])): ?>
-                        <img src="../../<?php echo htmlspecialchars($noticia['imagen_destacada']); ?>" alt="<?php echo htmlspecialchars($noticia['titulo']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="../../<?php echo htmlspecialchars($noticia['imagen_destacada']); ?>" alt="<?php echo htmlspecialchars($noticia['titulo']); ?>" style="width: 100%; height: 100%; object-fit: cover; object-position: <?php echo !empty($noticia['posicion_imagen']) ? htmlspecialchars($noticia['posicion_imagen']) : 'center center'; ?>;">
                     <?php else: ?>
                         <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffcc80;">
                             <i class="fas fa-newspaper fa-3x"></i>
