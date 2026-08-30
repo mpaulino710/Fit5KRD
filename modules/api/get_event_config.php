@@ -27,7 +27,7 @@ if ($event_id <= 0) {
 $db = getDB();
 
 // 1. Obtener detalles del evento
-$stmt = $db->prepare("SELECT id, nombre, latitud, longitud, distancia, categoria, estado, fecha_evento FROM eventos WHERE id = ? LIMIT 1");
+$stmt = $db->prepare("SELECT id, nombre, latitud, longitud, latitud_partida, longitud_partida, radio_geocerca, total_vueltas, distancia, categoria, estado, fecha_evento FROM eventos WHERE id = ? LIMIT 1");
 $stmt->bind_param("i", $event_id);
 $stmt->execute();
 $event = $stmt->get_result()->fetch_assoc();
@@ -49,16 +49,17 @@ if ($user_id > 0) {
     $inscripcion = $stmtInsc->get_result()->fetch_assoc();
 }
 
-// Calcular vueltas según distancia (ej. circuitos estándar o distancia directa)
-$distancia_km = floatval($event['distancia']);
-$total_vueltas = 1;
-if ($distancia_km > 0) {
-    // Si la modalidad define vueltas o distancia por vuelta (ej. circuito de 2.5km para 5k = 2 vueltas)
-    $total_vueltas = max(1, intval(ceil($distancia_km / 5.0))); // Por defecto 1 o según circuito
-}
+// Total vueltas y radio de geocerca configurados en el evento
+$total_vueltas = intval($event['total_vueltas'] ?? 1);
+if ($total_vueltas <= 0) $total_vueltas = 1;
 
-// Radio de tolerancia estándar en metros para la geocerca de la meta
-$geofence_radius_meters = 25; 
+$geofence_radius_meters = intval($event['radio_geocerca'] ?? 30);
+if ($geofence_radius_meters <= 0) $geofence_radius_meters = 30;
+
+$latMeta = floatval($event['latitud'] ?? 18.4861);
+$lngMeta = floatval($event['longitud'] ?? -69.9312);
+$latSalida = floatval($event['latitud_partida'] ?? $latMeta);
+$lngSalida = floatval($event['longitud_partida'] ?? $lngMeta);
 
 echo json_encode([
     'success' => true,
@@ -67,10 +68,15 @@ echo json_encode([
         'event_name' => $event['nombre'],
         'event_status' => $event['estado'],
         'event_date' => $event['fecha_evento'],
-        'finish_line_coordinates' => [
-            'latitude' => floatval($event['latitud'] ?? 18.4861),
-            'longitude' => floatval($event['longitud'] ?? -69.9312)
+        'start_line_coordinates' => [
+            'latitude' => $latSalida,
+            'longitude' => $lngSalida
         ],
+        'finish_line_coordinates' => [
+            'latitude' => $latMeta,
+            'longitude' => $lngMeta
+        ],
+        'is_circuit' => (abs($latSalida - $latMeta) < 0.00001 && abs($lngSalida - $lngMeta) < 0.00001),
         'geofence_radius_meters' => $geofence_radius_meters,
         'total_laps' => $total_vueltas,
         'registration' => $inscripcion ? [

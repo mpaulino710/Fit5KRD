@@ -28,6 +28,10 @@ $success = '';
         $ubicacion = trim($_POST['ubicacion'] ?? '');
         $latitud = !empty($_POST['latitud']) ? floatval($_POST['latitud']) : NULL;
         $longitud = !empty($_POST['longitud']) ? floatval($_POST['longitud']) : NULL;
+        $latitud_partida = !empty($_POST['latitud_partida']) ? floatval($_POST['latitud_partida']) : $latitud;
+        $longitud_partida = !empty($_POST['longitud_partida']) ? floatval($_POST['longitud_partida']) : $longitud;
+        $radio_geocerca = !empty($_POST['radio_geocerca']) ? intval($_POST['radio_geocerca']) : 30;
+        $total_vueltas = !empty($_POST['total_vueltas']) ? intval($_POST['total_vueltas']) : 1;
         
         // Procesar modalidades con costos
         $modalidades_nombres = $_POST['modalidades_nombres'] ?? [];
@@ -124,8 +128,8 @@ $success = '';
                     $organizador_id = $_SESSION['user_id'];
                 }
                 
-                $query = "INSERT INTO eventos (nombre, tipo_evento, descripcion, fecha_evento, fecha_limite_inscripcion, ubicacion, latitud, longitud, distancia, modalidades, precio, cupo_maximo, cupo_disponible, imagen_url, id_organizador, estado, incluye_camiseta, metodo_pago, fecha_creacion) 
-                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo', ?, ?, NOW())";
+                $query = "INSERT INTO eventos (nombre, tipo_evento, descripcion, fecha_evento, fecha_limite_inscripcion, ubicacion, latitud, longitud, latitud_partida, longitud_partida, radio_geocerca, total_vueltas, distancia, modalidades, precio, cupo_maximo, cupo_disponible, imagen_url, id_organizador, estado, incluye_camiseta, metodo_pago, fecha_creacion) 
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo', ?, ?, NOW())";
                 
                 $stmt = $db->prepare($query);
                 if (!$stmt) {
@@ -135,7 +139,7 @@ $success = '';
                 }
                 
                 // Tipos: s=string, i=integer, d=double
-                $stmt->bind_param("ssssssdddsdiissis", $nombre, $tipo_evento, $descripcion, $fecha_completa, $fecha_limite_completa, $ubicacion, $latitud, $longitud, $distancia, $modalidades_json, $precio, $cupo_maximo, $cupo_maximo, $imagen_url, $organizador_id, $incluye_camiseta, $metodo_pago_str);
+                $stmt->bind_param("ssssssddddiidsdiissis", $nombre, $tipo_evento, $descripcion, $fecha_completa, $fecha_limite_completa, $ubicacion, $latitud, $longitud, $latitud_partida, $longitud_partida, $radio_geocerca, $total_vueltas, $distancia, $modalidades_json, $precio, $cupo_maximo, $cupo_maximo, $imagen_url, $organizador_id, $incluye_camiseta, $metodo_pago_str);
                 
                 if ($stmt->execute()) {
                     ob_clean();
@@ -271,20 +275,92 @@ include '../../includes/admin-header.php';
                 
                 <div class="row">
                     <div class="form-group col-md-8">
-                        <label for="ubicacion">Ubicación *</label>
-                        <input type="text" id="ubicacion" name="ubicacion" class="form-control" required
+                        <label for="ubicacion">                        <input type="text" id="ubicacion" name="ubicacion" class="form-control" required
                                placeholder="Ej: Parque Mirador Sur, Km 0"
                                value="<?php echo isset($_POST['ubicacion']) ? htmlspecialchars($_POST['ubicacion']) : ''; ?>">
                          
-                        <!-- Map Container -->
-                        <div id="map-container" style="margin-top: 1rem;">
-                            <label><i class="fas fa-map-marker-alt"></i> Ubicación en Mapa (Arrastra el marcador)</label>
-                            <div id="map" style="height: 300px; width: 100%; border-radius: 4px; border: 1px solid #ced4da;"></div>
-                            <small class="form-text text-muted">Arrastra el marcador para establecer la ubicación exacta.</small>
-                            <input type="hidden" id="latitud" name="latitud" value="<?php echo isset($_POST['latitud']) ? $_POST['latitud'] : ''; ?>">
-                            <input type="hidden" id="longitud" name="longitud" value="<?php echo isset($_POST['longitud']) ? $_POST['longitud'] : ''; ?>">
+                        <!-- Map & GPS Tracking Container -->
+                        <div id="map-container" style="margin-top: 1.2rem; background: #fdfafc; border: 1px solid #e0d0f0; border-radius: 8px; padding: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; flex-wrap: wrap; gap: 0.5rem;">
+                                <label style="font-weight: 700; color: #2a004a; margin: 0;">
+                                    <i class="fas fa-satellite-dish" style="color: #6a0dad;"></i> Telemetría y Coordenadas GPS (App Móvil)
+                                </label>
+                                <div class="custom-control custom-checkbox" style="display: flex; align-items: center; gap: 6px;">
+                                    <input type="checkbox" id="mismo_punto_circuito" checked onchange="toggleMismoPunto(this.checked)">
+                                    <label for="mismo_punto_circuito" style="font-size: 0.85rem; font-weight: 600; color: #6a0dad; margin: 0; cursor: pointer;">
+                                        Circuito (Salida y Meta en el mismo punto)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="row" style="margin-bottom: 0.8rem;">
+                                <!-- Start Point -->
+                                <div class="col-md-6" id="grupo_salida" style="margin-bottom: 0.5rem;">
+                                    <div style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 6px; padding: 0.6rem;">
+                                        <div style="font-size: 0.82rem; font-weight: 700; color: #2e7d32; margin-bottom: 0.3rem;">
+                                            🟢 Punto de Partida / Salida
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                                            <div>
+                                                <small style="color: #666; font-size: 0.72rem;">Latitud:</small>
+                                                <input type="number" step="any" id="latitud_partida" name="latitud_partida" class="form-control form-control-sm" placeholder="18.4861" value="<?php echo isset($_POST['latitud_partida']) ? $_POST['latitud_partida'] : ''; ?>" oninput="syncManualInputs()">
+                                            </div>
+                                            <div>
+                                                <small style="color: #666; font-size: 0.72rem;">Longitud:</small>
+                                                <input type="number" step="any" id="longitud_partida" name="longitud_partida" class="form-control form-control-sm" placeholder="-69.9312" value="<?php echo isset($_POST['longitud_partida']) ? $_POST['longitud_partida'] : ''; ?>" oninput="syncManualInputs()">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Finish Point -->
+                                <div class="col-md-6" id="grupo_meta" style="margin-bottom: 0.5rem;">
+                                    <div style="background: #fce4ec; border: 1px solid #f8bbd0; border-radius: 6px; padding: 0.6rem;">
+                                        <div style="font-size: 0.82rem; font-weight: 700; color: #c2185b; margin-bottom: 0.3rem;">
+                                            🏁 Punto de Meta / Llegada
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                                            <div>
+                                                <small style="color: #666; font-size: 0.72rem;">Latitud:</small>
+                                                <input type="number" step="any" id="latitud" name="latitud" class="form-control form-control-sm" placeholder="18.4861" value="<?php echo isset($_POST['latitud']) ? $_POST['latitud'] : ''; ?>" oninput="syncManualInputs()">
+                                            </div>
+                                            <div>
+                                                <small style="color: #666; font-size: 0.72rem;">Longitud:</small>
+                                                <input type="number" step="any" id="longitud" name="longitud" class="form-control form-control-sm" placeholder="-69.9312" value="<?php echo isset($_POST['longitud']) ? $_POST['longitud'] : ''; ?>" oninput="syncManualInputs()">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Geofence & Laps params -->
+                            <div class="row" style="margin-bottom: 0.8rem;">
+                                <div class="col-md-6">
+                                    <label for="radio_geocerca" style="font-size: 0.82rem; font-weight: 600; color: #444; margin-bottom: 0.2rem;">
+                                        <i class="fas fa-bullseye" style="color: #e91e63;"></i> Radio de Geocerca (Metros de tolerancia)
+                                    </label>
+                                    <input type="number" id="radio_geocerca" name="radio_geocerca" class="form-control form-control-sm" min="10" max="500" value="<?php echo isset($_POST['radio_geocerca']) ? $_POST['radio_geocerca'] : '30'; ?>" oninput="updateGeofenceCircle(this.value)">
+                                    <small style="color: #777; font-size: 0.72rem;">Distancia alrededor de la meta donde la app registra el cruce (Recomendado: 25 - 40m).</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="total_vueltas" style="font-size: 0.82rem; font-weight: 600; color: #444; margin-bottom: 0.2rem;">
+                                        <i class="fas fa-sync-alt" style="color: #00bcd4;"></i> Total de Vueltas al Circuito
+                                    </label>
+                                    <input type="number" id="total_vueltas" name="total_vueltas" class="form-control form-control-sm" min="1" max="100" value="<?php echo isset($_POST['total_vueltas']) ? $_POST['total_vueltas'] : '1'; ?>">
+                                    <small style="color: #777; font-size: 0.72rem;">Número de cruces requeridos para completar la carrera.</small>
+                                </div>
+                            </div>
+
+                            <!-- Map Canvas -->
+                            <div id="map" style="height: 320px; width: 100%; border-radius: 6px; border: 1px solid #ced4da;"></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; font-size: 0.75rem; color: #666;">
+                                <span><i class="fas fa-info-circle"></i> Arrastra los marcadores en el mapa para ajustar la posición exacta.</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="getCurrentLocationForMap()" style="padding: 2px 8px; font-size: 0.75rem;">
+                                    <i class="fas fa-crosshairs"></i> Mi Ubicación
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </div>                 </div>
                     
                     <div class="form-group col-md-4" id="distancia-group">
                         <label>Modalidades y Precios</label>
@@ -475,48 +551,148 @@ document.addEventListener('DOMContentLoaded', function() {
     initMap();
 });
 
-// Inicializar Mapa
+let map, startMarker, finishMarker, geofenceCircle;
+
+// Inicializar Mapa con Soporte para Salida, Meta y Geocerca
 function initMap() {
-    // Coordenadas iniciales (Santiago, RD o las guardadas si falló validación)
-    let lat = document.getElementById('latitud').value || 19.4517;
-    let lng = document.getElementById('longitud').value || -70.69703;
-    
-    // Si no hay valor previo, usar una ubicación por defecto (Santiago RD)
-    const defaultLat = 19.4517; 
-    const defaultLng = -70.69703; 
+    let latFinish = parseFloat(document.getElementById('latitud').value) || 18.4861;
+    let lngFinish = parseFloat(document.getElementById('longitud').value) || -69.9312;
+    let latStart = parseFloat(document.getElementById('latitud_partida').value) || latFinish;
+    let lngStart = parseFloat(document.getElementById('longitud_partida').value) || lngFinish;
+    let radius = parseInt(document.getElementById('radio_geocerca').value, 10) || 30;
 
-    if (!lat) lat = defaultLat;
-    if (!lng) lng = defaultLng;
-
-    const map = L.map('map').setView([lat, lng], 13);
+    map = L.map('map').setView([latFinish, lngFinish], 15);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 
-    const marker = L.marker([lat, lng], {
-        draggable: true
+    // Iconos personalizados con HTML/SVG
+    const startIcon = L.divIcon({
+        className: 'custom-map-icon',
+        html: '<div style="background:#2e7d32; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.4); border:2px solid white; font-weight:bold; font-size:14px;"><i class="fas fa-play" style="font-size:10px;"></i></div>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+    });
+
+    const finishIcon = L.divIcon({
+        className: 'custom-map-icon',
+        html: '<div style="background:#c2185b; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.4); border:2px solid white; font-weight:bold; font-size:14px;"><i class="fas fa-flag-checkered"></i></div>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+    });
+
+    // Marcador de Partida
+    startMarker = L.marker([latStart, lngStart], {
+        draggable: true,
+        icon: startIcon
+    }).addTo(map).bindPopup('<b>🟢 Punto de Partida / Salida</b>');
+
+    // Marcador de Meta
+    finishMarker = L.marker([latFinish, lngFinish], {
+        draggable: true,
+        icon: finishIcon
+    }).addTo(map).bindPopup('<b>🏁 Punto de Meta / Llegada</b>');
+
+    // Círculo de Geocerca en la Meta
+    geofenceCircle = L.circle([latFinish, lngFinish], {
+        color: '#c2185b',
+        fillColor: '#f8bbd0',
+        fillOpacity: 0.35,
+        radius: radius
     }).addTo(map);
 
-    // Actualizar inputs al arrastrar
-    marker.on('dragend', function(e) {
-        const position = marker.getLatLng();
-        document.getElementById('latitud').value = position.lat;
-        document.getElementById('longitud').value = position.lng;
+    // Eventos de arrastre
+    startMarker.on('drag', function() {
+        const pos = startMarker.getLatLng();
+        document.getElementById('latitud_partida').value = pos.lat.toFixed(7);
+        document.getElementById('longitud_partida').value = pos.lng.toFixed(7);
+        
+        const isSame = document.getElementById('mismo_punto_circuito').checked;
+        if (isSame) {
+            finishMarker.setLatLng(pos);
+            geofenceCircle.setLatLng(pos);
+            document.getElementById('latitud').value = pos.lat.toFixed(7);
+            document.getElementById('longitud').value = pos.lng.toFixed(7);
+        }
     });
 
-    // Actualizar inputs al hacer clic en el mapa
-    map.on('click', function(e) {
-        marker.setLatLng(e.latlng);
-        document.getElementById('latitud').value = e.latlng.lat;
-        document.getElementById('longitud').value = e.latlng.lng;
+    finishMarker.on('drag', function() {
+        const pos = finishMarker.getLatLng();
+        document.getElementById('latitud').value = pos.lat.toFixed(7);
+        document.getElementById('longitud').value = pos.lng.toFixed(7);
+        geofenceCircle.setLatLng(pos);
+
+        const isSame = document.getElementById('mismo_punto_circuito').checked;
+        if (isSame) {
+            startMarker.setLatLng(pos);
+            document.getElementById('latitud_partida').value = pos.lat.toFixed(7);
+            document.getElementById('longitud_partida').value = pos.lng.toFixed(7);
+        }
     });
-    
-    // Set initial values if empty
-    if (!document.getElementById('latitud').value) {
-        document.getElementById('latitud').value = lat;
-        document.getElementById('longitud').value = lng;
+
+    // Asignar valores iniciales a inputs
+    document.getElementById('latitud').value = latFinish.toFixed(7);
+    document.getElementById('longitud').value = lngFinish.toFixed(7);
+    document.getElementById('latitud_partida').value = latStart.toFixed(7);
+    document.getElementById('longitud_partida').value = lngStart.toFixed(7);
+
+    // Si los puntos son distintos de entrada, desmarcar el checkbox
+    if (Math.abs(latStart - latFinish) > 0.0001 || Math.abs(lngStart - lngFinish) > 0.0001) {
+        document.getElementById('mismo_punto_circuito').checked = false;
+    }
+}
+
+function updateGeofenceCircle(val) {
+    const radius = parseInt(val, 10) || 30;
+    if (geofenceCircle) {
+        geofenceCircle.setRadius(radius);
+    }
+}
+
+function toggleMismoPunto(checked) {
+    if (checked && startMarker && finishMarker) {
+        const pos = finishMarker.getLatLng();
+        startMarker.setLatLng(pos);
+        document.getElementById('latitud_partida').value = pos.lat.toFixed(7);
+        document.getElementById('longitud_partida').value = pos.lng.toFixed(7);
+    }
+}
+
+function syncManualInputs() {
+    const latF = parseFloat(document.getElementById('latitud').value);
+    const lngF = parseFloat(document.getElementById('longitud').value);
+    const latS = parseFloat(document.getElementById('latitud_partida').value);
+    const lngS = parseFloat(document.getElementById('longitud_partida').value);
+
+    if (!isNaN(latF) && !isNaN(lngF) && finishMarker) {
+        finishMarker.setLatLng([latF, lngF]);
+        geofenceCircle.setLatLng([latF, lngF]);
+    }
+    if (!isNaN(latS) && !isNaN(lngS) && startMarker) {
+        startMarker.setLatLng([latS, lngS]);
+    }
+}
+
+function getCurrentLocationForMap() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            
+            document.getElementById('latitud').value = lat.toFixed(7);
+            document.getElementById('longitud').value = lng.toFixed(7);
+            document.getElementById('latitud_partida').value = lat.toFixed(7);
+            document.getElementById('longitud_partida').value = lng.toFixed(7);
+            
+            finishMarker.setLatLng([lat, lng]);
+            startMarker.setLatLng([lat, lng]);
+            geofenceCircle.setLatLng([lat, lng]);
+            map.setView([lat, lng], 16);
+        }, function(err) {
+            alert('No se pudo obtener la ubicación actual: ' + err.message);
+        });
     }
 }
 </script>
