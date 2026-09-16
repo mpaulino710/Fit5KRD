@@ -58,157 +58,75 @@ include '../../includes/header.php';
 ?>
 
 
-<div class="hero-section" style="position: relative; overflow: hidden; padding: 0;">
+<div class="home-hero-layout">
     
-    <?php if (!empty($fotos_collage)): ?>
-    <!-- Background Collage -->
-    <div class="hero-collage">
-        <?php foreach ($fotos_collage as $foto): ?>
-        <div class="collage-item">
-            <img src="../../<?php echo htmlspecialchars($foto['url_foto']); ?>" alt="Momento Fit5K">
+    <!-- LATERAL IZQUIERDO: Próximos Eventos -->
+    <aside class="home-hero-sidebar home-sidebar-left">
+        <div class="sidebar-header">
+            <div class="sidebar-title-group">
+                <div class="sidebar-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div>
+                    <h2 class="sidebar-title">Próximos Eventos</h2>
+                    <span class="sidebar-subtitle">Inscríbete y participa</span>
+                </div>
+            </div>
+            <?php if (!empty($eventos)): ?>
+            <a href="../events/index.php" class="sidebar-header-link" title="Ver todos">
+                Ver todos <i class="fas fa-chevron-right"></i>
+            </a>
+            <?php endif; ?>
         </div>
-        <?php endforeach; ?>
-    </div>
-    
 
-    <style>
-    .hero-collage {
-        position: relative;
-        width: 100%;
-        height: 400px;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: 1fr;
-        gap: 0;
-        z-index: 1;
-        opacity: 1;
-    }
-    .collage-item {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-    .collage-item img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    /* Mobile adjustment */
-    @media (max-width: 768px) {
-        .hero-collage {
-            grid-template-columns: 1fr;
-            grid-template-rows: repeat(3, 1fr);
-            height: 600px; /* Taller for stacked images */
-        }
-    }
-    </style>
-    <?php endif; ?>
-
-    <div class="hero-content" style="position: relative; z-index: 2; padding: 1rem 2rem;">
-        <h1>¡Corre hacia tus metas con Fit5K!</h1>
-        <p class="hero-description">
-            Únete a la comunidad más grande de gente Fit!
-            Participa en emocionantes eventos donde se integran actividades como:
-            Zumba, Caminar, Correr, Charlas, Cursos y Talleres
-        </p>
-        <?php if (!isset($_SESSION['user_id'])): ?> 
-        <a href="../auth/register.php" class="btn btn-primary hero-btn">
-            Únete Ahora
-        </a>
-        <?php endif; ?>
-    </div>
-</div>
-
-<div class="container">
-    <!-- Sección de Estadísticas con tarjetas -->
-    <div class="stats-section">
-        <h2 class="section-title">Nuestra Comunidad</h2>
-        <div class="stats-grid">
-           <!-- <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-running"></i>
-                </div>
-                <div class="stat-number"><?php echo number_format($total_corredores); ?></div>
-                <div class="stat-label">Corredores Registrados</div>
-            </div>
-            -->
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-flag-checkered"></i>
-                </div>
-                <div class="stat-number"><?php echo number_format($total_eventos); ?></div>
-                <div class="stat-label">Eventos Realizados</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                <div class="stat-number"><?php echo number_format(count($eventos)); ?></div>
-                <div class="stat-label">Próximos Eventos</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sección de Eventos -->
-    <div class="events-section">
-        <h2 class="section-title">Próximos Eventos</h2>
-        
         <?php if (!empty($eventos)): ?>
-        <div class="events-grid">
+        <div class="sidebar-events-list">
             <?php foreach ($eventos as $evento): ?>
-            <div class="event-card">
-                <div class="event-header">
-                    <div class="event-image">
-                        <?php 
-                        $iconClass = 'fa-running';
-                        if (isset($evento['tipo_evento'])) {
-                            switch($evento['tipo_evento']) {
-                                case 'zumba': $iconClass = 'fa-music'; break;
-                                case 'caminata': $iconClass = 'fa-walking'; break;
-                                case 'charla': $iconClass = 'fa-microphone'; break;
-                                case 'curso': $iconClass = 'fa-graduation-cap'; break;
-                                case 'taller': $iconClass = 'fa-tools'; break;
-                                default: $iconClass = 'fa-running';
+            <div class="sidebar-event-card">
+                <div class="sidebar-event-top">
+                    <div class="sidebar-event-badge-row">
+                        <span class="badge-cat-type">
+                            <?php 
+                            $iconClass = 'fa-running';
+                            if (isset($evento['tipo_evento'])) {
+                                switch($evento['tipo_evento']) {
+                                    case 'zumba': $iconClass = 'fa-music'; break;
+                                    case 'caminata': $iconClass = 'fa-walking'; break;
+                                    case 'charla': $iconClass = 'fa-microphone'; break;
+                                    case 'curso': $iconClass = 'fa-graduation-cap'; break;
+                                    case 'taller': $iconClass = 'fa-tools'; break;
+                                    default: $iconClass = 'fa-running';
+                                }
                             }
-                        }
-                        ?>
-                        <span class="event-initials"><i class="fas <?php echo $iconClass; ?>"></i></span>
-                    </div>
-                    <div class="event-basic-info">
-                        <div class="event-type-badge" style="font-size: 0.8rem; text-transform: uppercase; color: var(--primary-color); font-weight: bold; margin-bottom: 5px;">
+                            ?>
+                            <i class="fas <?php echo $iconClass; ?>"></i>
                             <?php echo isset($evento['tipo_evento']) ? ucfirst($evento['tipo_evento']) : 'Carrera'; ?>
-                        </div>
-                        <h3 class="event-title"><?php echo htmlspecialchars($evento['nombre']); ?></h3>
-                        <div class="event-date">
-                            <i class="fas fa-calendar-alt"></i>
-                            <?php echo date('d/m/Y h:i A', strtotime($evento['fecha_evento'])); ?>
-                        </div>
+                        </span>
+                        <span class="badge-date-info">
+                            <i class="far fa-clock"></i>
+                            <?php echo date('d/m h:i A', strtotime($evento['fecha_evento'])); ?>
+                        </span>
                     </div>
+                    <h3 class="sidebar-event-title">
+                        <a href="../events/view.php?id=<?php echo $evento['id']; ?>">
+                            <?php echo htmlspecialchars($evento['nombre']); ?>
+                        </a>
+                    </h3>
                 </div>
-                
-                <div class="event-details">
-                    <div class="detail-row">
-                        <div class="detail-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span><?php echo htmlspecialchars($evento['ubicacion']); ?></span>
-                        </div>
-                        <?php if ($evento['distancia'] > 0): ?>
-                        <div class="detail-item">
-                            <i class="fas fa-route"></i>
-                            <span><?php echo $evento['distancia']; ?> km</span>
-                        </div>
-                        <?php endif; ?>
+
+                <div class="sidebar-event-meta">
+                    <div class="meta-line">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span title="<?php echo htmlspecialchars($evento['ubicacion']); ?>">
+                            <?php echo htmlspecialchars($evento['ubicacion']); ?>
+                        </span>
                     </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-item">
-                            <i class="fas fa-users"></i>
-                            <span>Cupos: Disponibles<!-- <?php echo $evento['cupo_disponible']; ?>/<?php echo $evento['cupo_maximo']; ?> --></span>
-                        </div>
-                        <div class="detail-item">
-                            <i class="fas fa-tag"></i>
-                            <span><?php 
+                    <div class="meta-line-flex">
+                        <?php if ($evento['distancia'] > 0): ?>
+                        <span><i class="fas fa-route"></i> <?php echo $evento['distancia']; ?> km</span>
+                        <?php endif; ?>
+                        <span class="meta-price">
+                            <?php 
                                 $modalidades = !empty($evento['modalidades']) ? json_decode($evento['modalidades'], true) : [];
                                 $mostrar_desde = false;
                                 foreach ($modalidades as $mod) {
@@ -218,117 +136,890 @@ include '../../includes/header.php';
                                     }
                                 }
                                 echo ($mostrar_desde ? 'Desde ' : '') . '$' . number_format($evento['precio'], 2); 
-                            ?></span>
-                        </div>
+                            ?>
+                        </span>
                     </div>
                 </div>
-                
-                <div class="event-actions">
-                    <a href="../events/view.php?id=<?php echo $evento['id']; ?>" class="btn btn-outline">
-                        <i class="fas fa-eye"></i> Detalles
+
+                <div class="sidebar-event-actions">
+                    <a href="../events/view.php?id=<?php echo $evento['id']; ?>" class="btn-sidebar btn-outline-sidebar">
+                        Detalles
                     </a>
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <?php if (in_array($evento['id'], $inscripciones_usuario)): ?>
-                        <span class="btn btn-secondary" style="background-color: #6c757d; cursor: default;">
-                            <i class="fas fa-check-circle"></i> Inscrito
+                        <span class="btn-sidebar btn-enrolled">
+                            <i class="fas fa-check"></i> Inscrito
                         </span>
                         <?php else: ?>
-                        <a href="../events/register.php?event_id=<?php echo $evento['id']; ?>" class="btn btn-primary">
-                            <i class="fas fa-user-plus"></i> Únete
+                        <a href="../events/register.php?event_id=<?php echo $evento['id']; ?>" class="btn-sidebar btn-primary-sidebar">
+                            Únete
                         </a>
                         <?php endif; ?>
                     <?php else: ?>
-                    <a href="../auth/login.php" class="btn btn-primary">
-                        <i class="fas fa-sign-in-alt"></i> Unete
+                    <a href="../auth/login.php" class="btn-sidebar btn-primary-sidebar">
+                        Únete
                     </a>
                     <?php endif; ?>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
+
+        <div class="sidebar-footer-cta">
+            <a href="../events/index.php" class="btn-view-all">
+                <i class="fas fa-calendar-alt"></i> Ver Todos los Eventos (<?php echo count($eventos); ?>)
+            </a>
+        </div>
         <?php else: ?>
-        <div class="no-events">
+        <div class="sidebar-empty-state">
             <i class="fas fa-calendar-times"></i>
-            <h3>No hay eventos próximos programados</h3>
-            <p>Vuelve pronto para conocer nuestras próximas carreras.</p>
+            <p>No hay eventos próximos programados por el momento.</p>
         </div>
         <?php endif; ?>
+    </aside>
 
-
-    <?php if (!empty($eventos)): ?>
-        <div class="view-all-events">
-            <a href="../events/index.php" class="btn btn-primary btn-large">
-                <i class="fas fa-calendar-alt"></i> Ver Todos los Eventos
-            </a>
-        </div>
-        <?php endif; ?>
-    </div>
-
-    <?php if (!empty($noticias_home)): ?>
-    <!-- Sección de Novedades y Videos -->
-    <div class="news-section" style="margin-top: 3rem; margin-bottom: 3rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-            <div>
-                <h2 class="section-title" style="margin-bottom: 0.3rem; text-align: left;">Novedades & Videos Fit5K</h2>
-                <p style="color: #6c757d; margin: 0;">Mantente al día con nuestros últimos artículos, rutinas y coberturas en video.</p>
+    <!-- CENTRO: PANTALLA PRINCIPAL / HERO -->
+    <section class="home-hero-center">
+        <div class="hero-main-card">
+            <?php if (!empty($fotos_collage)): ?>
+            <div class="hero-collage-wrapper">
+                <div class="hero-collage-grid">
+                    <?php foreach ($fotos_collage as $foto): ?>
+                    <div class="hero-collage-cell">
+                        <img src="../../<?php echo htmlspecialchars($foto['url_foto']); ?>" alt="Momento Fit5K">
+                    </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
-            <a href="news.php" class="btn btn-outline" style="border-radius: 20px; font-weight: 500;">
-                Ver Todas las Noticias <i class="fas fa-arrow-right"></i>
+            <?php endif; ?>
+
+            <div class="hero-center-body">
+                <div class="hero-tagline"><i class="fas fa-bolt"></i> Comunidad Deportiva & Fitness</div>
+                <h1 class="hero-main-title">¡Corre hacia tus metas con Fit5K!</h1>
+                <p class="hero-main-desc">
+                    Únete a la comunidad más grande de gente Fit. Participa en emocionantes actividades integradas como
+                    <strong>Zumba, Caminatas, Carreras, Charlas, Cursos y Talleres</strong> diseñadas para llevar tu bienestar al siguiente nivel.
+                </p>
+                <div class="hero-center-cta">
+                    <?php if (!isset($_SESSION['user_id'])): ?> 
+                    <a href="../auth/register.php" class="btn btn-primary hero-main-btn">
+                        <i class="fas fa-user-plus"></i> ¡Únete Ahora!
+                    </a>
+                    <?php else: ?>
+                    <a href="../events/index.php" class="btn btn-primary hero-main-btn">
+                        <i class="fas fa-calendar-alt"></i> Explorar Todos los Eventos
+                    </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Estadísticas integradas en la base del hero central -->
+            <div class="hero-center-stats">
+                <div class="hero-stat-box">
+                    <div class="hero-stat-ico">
+                        <i class="fas fa-flag-checkered"></i>
+                    </div>
+                    <div class="hero-stat-text">
+                        <span class="hero-stat-val"><?php echo number_format($total_eventos); ?></span>
+                        <span class="hero-stat-lbl">Eventos Realizados</span>
+                    </div>
+                </div>
+
+                <div class="hero-stat-sep"></div>
+
+                <div class="hero-stat-box">
+                    <div class="hero-stat-ico">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="hero-stat-text">
+                        <span class="hero-stat-val"><?php echo number_format(count($eventos)); ?></span>
+                        <span class="hero-stat-lbl">Próximos Eventos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LATERAL DERECHO: Novedades & Videos Fit5K -->
+    <aside class="home-hero-sidebar home-sidebar-right">
+        <div class="sidebar-header header-news">
+            <div class="sidebar-title-group">
+                <div class="sidebar-icon icon-news">
+                    <i class="fas fa-play-circle"></i>
+                </div>
+                <div>
+                    <h2 class="sidebar-title">Novedades & Videos</h2>
+                    <span class="sidebar-subtitle">Rutinas y coberturas</span>
+                </div>
+            </div>
+            <?php if (!empty($noticias_home)): ?>
+            <a href="news.php" class="sidebar-header-link" title="Ver todas">
+                Ver todas <i class="fas fa-chevron-right"></i>
             </a>
+            <?php endif; ?>
         </div>
 
-        <div class="news-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+        <?php if (!empty($noticias_home)): ?>
+        <div class="sidebar-news-list">
             <?php foreach ($noticias_home as $noticia): ?>
-            <div class="news-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); transition: transform 0.3s ease, box-shadow 0.3s ease; display: flex; flex-direction: column;">
-                
-                <div class="news-media" style="position: relative; height: 190px; overflow: hidden; background: #2a004a;">
+            <article class="sidebar-news-card">
+                <div class="sidebar-news-media">
                     <?php if (!empty($noticia['youtube_id'])): ?>
-                        <iframe src="https://www.youtube.com/embed/<?php echo htmlspecialchars($noticia['youtube_id']); ?>" style="width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
-                    <?php elseif (!empty($noticia['imagen_destacada'])): ?>
-                        <img src="../../<?php echo htmlspecialchars($noticia['imagen_destacada']); ?>" alt="<?php echo htmlspecialchars($noticia['titulo']); ?>" style="width: 100%; height: 100%; object-fit: cover; object-position: <?php echo !empty($noticia['posicion_imagen']) ? htmlspecialchars($noticia['posicion_imagen']) : 'center center'; ?>;">
-                    <?php else: ?>
-                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ffcc80;">
-                            <i class="fas fa-newspaper fa-3x"></i>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if (!empty($noticia['youtube_id'])): ?>
-                        <span style="position: absolute; top: 10px; right: 10px; background: #ff0000; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 4px; pointer-events: none;">
+                        <iframe src="https://www.youtube.com/embed/<?php echo htmlspecialchars($noticia['youtube_id']); ?>" 
+                                title="<?php echo htmlspecialchars($noticia['titulo']); ?>" 
+                                loading="lazy" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen>
+                        </iframe>
+                        <span class="badge-yt-video">
                             <i class="fab fa-youtube"></i> Video
                         </span>
+                    <?php elseif (!empty($noticia['imagen_destacada'])): ?>
+                        <a href="view-news.php?slug=<?php echo htmlspecialchars($noticia['slug']); ?>">
+                            <img src="../../<?php echo htmlspecialchars($noticia['imagen_destacada']); ?>" 
+                                 alt="<?php echo htmlspecialchars($noticia['titulo']); ?>" 
+                                 style="object-position: <?php echo !empty($noticia['posicion_imagen']) ? htmlspecialchars($noticia['posicion_imagen']) : 'center center'; ?>;">
+                        </a>
+                    <?php else: ?>
+                        <div class="sidebar-news-ph">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
                     <?php endif; ?>
                 </div>
 
-                <div class="news-body" style="padding: 1.2rem; display: flex; flex-direction: column; flex: 1;">
-                    <div style="font-size: 0.8rem; color: #888; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 12px;">
+                <div class="sidebar-news-body">
+                    <div class="sidebar-news-meta">
                         <span><i class="far fa-calendar-alt"></i> <?php echo date('d/m/Y', strtotime($noticia['creado_en'])); ?></span>
                         <span><i class="far fa-eye"></i> <?php echo number_format($noticia['visitas']); ?> lecturas</span>
                     </div>
 
-                    <h3 style="font-size: 1.15rem; font-weight: 600; margin: 0 0 0.6rem 0; line-height: 1.4;">
-                        <a href="view-news.php?slug=<?php echo htmlspecialchars($noticia['slug']); ?>" style="color: #2a004a; text-decoration: none; transition: color 0.2s;">
+                    <h3 class="sidebar-news-title">
+                        <a href="view-news.php?slug=<?php echo htmlspecialchars($noticia['slug']); ?>">
                             <?php echo htmlspecialchars($noticia['titulo']); ?>
                         </a>
                     </h3>
 
                     <?php if (!empty($noticia['resumen'])): ?>
-                        <p style="color: #666; font-size: 0.9rem; line-height: 1.5; margin: 0 0 1.2rem 0; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                            <?php echo htmlspecialchars($noticia['resumen']); ?>
-                        </p>
+                    <p class="sidebar-news-excerpt">
+                        <?php echo htmlspecialchars($noticia['resumen']); ?>
+                    </p>
                     <?php endif; ?>
 
-                    <div style="margin-top: auto; padding-top: 0.5rem; border-top: 1px solid #f0f0f0;">
-                        <a href="view-news.php?slug=<?php echo htmlspecialchars($noticia['slug']); ?>" style="color: var(--primary-color, #6a0dad); text-decoration: none; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px;">
-                            Leer Artículo Completo <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i>
+                    <div class="sidebar-news-footer">
+                        <a href="view-news.php?slug=<?php echo htmlspecialchars($noticia['slug']); ?>" class="news-more-link">
+                            Leer Más <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
                 </div>
-            </div>
+            </article>
             <?php endforeach; ?>
         </div>
-    </div>
-    <?php endif; ?>
+
+        <div class="sidebar-footer-cta">
+            <a href="news.php" class="btn-view-all btn-view-all-news">
+                <i class="fas fa-newspaper"></i> Ver Todas las Noticias y Videos
+            </a>
+        </div>
+        <?php else: ?>
+        <div class="sidebar-empty-state">
+            <i class="fas fa-newspaper"></i>
+            <p>No hay novedades publicadas aún.</p>
+        </div>
+        <?php endif; ?>
+    </aside>
+
 </div>
+
+<style>
+/* ===== EXPANDIR CONTENEDOR PRINCIPAL PARA 3 COLUMNAS ===== */
+main.container {
+    max-width: 1560px !important;
+    width: 98% !important;
+    padding: 0 0.5rem !important;
+}
+
+/* Layout de 3 columnas de la pantalla principal */
+.home-hero-layout {
+    display: grid;
+    grid-template-columns: minmax(290px, 320px) minmax(0, 1fr) minmax(290px, 320px);
+    gap: 1.25rem;
+    align-items: start;
+    margin: 0.5rem auto 2.5rem auto;
+}
+
+/* ===== ESTILOS DE LOS LATERALES (IZQUIERDO Y DERECHO) ===== */
+.home-hero-sidebar {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1.1rem;
+    border: 1px solid #eaedf1;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f1f3f6;
+    position: relative;
+}
+
+.sidebar-header::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 45px;
+    height: 2px;
+    background: var(--primary-color, #6a0dad);
+}
+
+.sidebar-header.header-news::after {
+    background: #e53935;
+}
+
+.sidebar-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.sidebar-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--primary-color, #6a0dad), var(--primary-light, #8a2be2));
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    box-shadow: 0 4px 10px rgba(106, 13, 173, 0.22);
+    flex-shrink: 0;
+}
+
+.sidebar-icon.icon-news {
+    background: linear-gradient(135deg, #e53935, #ff7043);
+    box-shadow: 0 4px 10px rgba(229, 57, 53, 0.22);
+}
+
+.sidebar-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2a004a;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.sidebar-subtitle {
+    font-size: 0.75rem;
+    color: #888;
+    display: block;
+}
+
+.sidebar-header-link {
+    color: var(--primary-color, #6a0dad);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(106, 13, 173, 0.06);
+    transition: all 0.2s ease;
+}
+
+.sidebar-header-link:hover {
+    background: var(--primary-color, #6a0dad);
+    color: #ffffff;
+}
+
+/* Listas de tarjetas */
+.sidebar-events-list,
+.sidebar-news-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    max-height: 720px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Scrollbar fina para las columnas */
+.sidebar-events-list::-webkit-scrollbar,
+.sidebar-news-list::-webkit-scrollbar {
+    width: 4px;
+}
+.sidebar-events-list::-webkit-scrollbar-thumb,
+.sidebar-news-list::-webkit-scrollbar-thumb {
+    background: #e0e0e0;
+    border-radius: 4px;
+}
+
+/* Tarjeta de evento en barra lateral */
+.sidebar-event-card {
+    background: #fbfbfd;
+    border: 1px solid #eaedf1;
+    border-radius: 12px;
+    padding: 0.85rem;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sidebar-event-card:hover {
+    background: #ffffff;
+    border-color: rgba(106, 13, 173, 0.3);
+    box-shadow: 0 6px 16px rgba(106, 13, 173, 0.08);
+    transform: translateY(-2px);
+}
+
+.sidebar-event-badge-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+}
+
+.badge-cat-type {
+    background: rgba(106, 13, 173, 0.1);
+    color: var(--primary-color, #6a0dad);
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.badge-date-info {
+    color: #777;
+    font-weight: 500;
+}
+
+.sidebar-event-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0.2rem 0;
+    line-height: 1.3;
+}
+
+.sidebar-event-title a {
+    color: #2a004a;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.sidebar-event-title a:hover {
+    color: var(--primary-color, #6a0dad);
+}
+
+.sidebar-event-meta {
+    font-size: 0.78rem;
+    color: #666;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.meta-line {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.meta-line i, .meta-line-flex i {
+    color: var(--primary-color, #6a0dad);
+    font-size: 0.75rem;
+    width: 14px;
+}
+
+.meta-line-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.meta-price {
+    font-weight: 700;
+    color: #28a745;
+}
+
+.sidebar-event-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 0.25rem;
+}
+
+.btn-sidebar {
+    flex: 1;
+    text-align: center;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-sidebar {
+    border: 1px solid #ced4da;
+    color: #495057;
+    background: #ffffff;
+}
+
+.btn-outline-sidebar:hover {
+    border-color: var(--primary-color, #6a0dad);
+    color: var(--primary-color, #6a0dad);
+}
+
+.btn-primary-sidebar {
+    background: var(--primary-color, #6a0dad);
+    color: #ffffff;
+    border: 1px solid var(--primary-color, #6a0dad);
+}
+
+.btn-primary-sidebar:hover {
+    background: var(--primary-dark, #4b0082);
+    color: #ffffff;
+}
+
+.btn-enrolled {
+    background: #6c757d;
+    color: #ffffff;
+    cursor: default;
+}
+
+/* Tarjeta de noticia en barra lateral */
+.sidebar-news-card {
+    background: #fbfbfd;
+    border: 1px solid #eaedf1;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-news-card:hover {
+    background: #ffffff;
+    border-color: rgba(229, 57, 53, 0.3);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+}
+
+.sidebar-news-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #1a002c;
+    overflow: hidden;
+}
+
+.sidebar-news-media iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+}
+
+.sidebar-news-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-news-card:hover .sidebar-news-media img {
+    transform: scale(1.03);
+}
+
+.badge-yt-video {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: #ff0000;
+    color: #ffffff;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    pointer-events: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-news-ph {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffcc80;
+    font-size: 2rem;
+}
+
+.sidebar-news-body {
+    padding: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.sidebar-news-meta {
+    font-size: 0.72rem;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-news-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.35;
+}
+
+.sidebar-news-title a {
+    color: #2a004a;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.sidebar-news-title a:hover {
+    color: #e53935;
+}
+
+.sidebar-news-excerpt {
+    font-size: 0.8rem;
+    color: #666;
+    line-height: 1.4;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sidebar-news-footer {
+    margin-top: 0.3rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.news-more-link {
+    color: #e53935;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.news-more-link:hover {
+    color: #b71c1c;
+    gap: 7px;
+}
+
+.sidebar-footer-cta {
+    margin-top: 0.25rem;
+}
+
+.btn-view-all {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 0.65rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    background: rgba(106, 13, 173, 0.08);
+    color: var(--primary-color, #6a0dad);
+    border: 1px solid rgba(106, 13, 173, 0.15);
+    transition: all 0.2s ease;
+}
+
+.btn-view-all:hover {
+    background: var(--primary-color, #6a0dad);
+    color: #ffffff;
+}
+
+.btn-view-all-news {
+    background: rgba(229, 57, 53, 0.08);
+    color: #e53935;
+    border: 1px solid rgba(229, 57, 53, 0.15);
+}
+
+.btn-view-all-news:hover {
+    background: #e53935;
+    color: #ffffff;
+}
+
+.sidebar-empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #999;
+}
+.sidebar-empty-state i {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #ccc;
+}
+.sidebar-empty-state p {
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* ===== CENTRO: PANTALLA PRINCIPAL (HERO) ===== */
+.home-hero-center {
+    display: flex;
+    flex-direction: column;
+}
+
+.hero-main-card {
+    background: #ffffff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(106, 13, 173, 0.08);
+    border: 1px solid #eaedf1;
+    display: flex;
+    flex-direction: column;
+}
+
+.hero-collage-wrapper {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    overflow: hidden;
+    border-bottom: 1px solid #eaedf1;
+}
+
+.hero-collage-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+    height: 100%;
+}
+
+.hero-collage-cell {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.hero-collage-cell img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+}
+
+.hero-collage-cell:hover img {
+    transform: scale(1.04);
+}
+
+.hero-center-body {
+    padding: 2rem 2.5rem;
+    text-align: center;
+    background: #ffffff;
+}
+
+.hero-tagline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(106, 13, 173, 0.08);
+    color: var(--primary-color, #6a0dad);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+}
+
+.hero-main-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: #2a004a;
+    line-height: 1.2;
+    margin: 0 0 1.2rem 0;
+    letter-spacing: -0.5px;
+}
+
+.hero-main-desc {
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: #555;
+    max-width: 620px;
+    margin: 0 auto 1.75rem auto;
+}
+
+.hero-main-desc strong {
+    color: var(--primary-color, #6a0dad);
+}
+
+.hero-center-cta {
+    margin-bottom: 0.5rem;
+}
+
+.hero-main-btn {
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 0.85rem 2.5rem;
+    border-radius: 50px;
+    background: linear-gradient(135deg, var(--primary-color, #6a0dad), var(--primary-dark, #4b0082));
+    border: none;
+    box-shadow: 0 8px 20px rgba(106, 13, 173, 0.3);
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.hero-main-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(106, 13, 173, 0.4);
+    color: #ffffff;
+}
+
+/* Estadísticas integradas en la base del hero */
+.hero-center-stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: #fbfbfd;
+    border-top: 1px solid #eaedf1;
+    padding: 1.25rem 2rem;
+}
+
+.hero-stat-box {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.hero-stat-ico {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(106, 13, 173, 0.1), rgba(255, 204, 128, 0.25));
+    color: var(--primary-color, #6a0dad);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.hero-stat-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.hero-stat-val {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: var(--primary-dark, #4b0082);
+    line-height: 1;
+}
+
+.hero-stat-lbl {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.hero-stat-sep {
+    width: 1px;
+    height: 40px;
+    background: #eaedf1;
+}
+
+/* ===== RESPONSIVIDAD ===== */
+@media (max-width: 1200px) {
+    .home-hero-layout {
+        grid-template-columns: 280px minmax(0, 1fr) 280px;
+        gap: 1rem;
+    }
+    .hero-main-title {
+        font-size: 2rem;
+    }
+    .hero-center-body {
+        padding: 1.75rem 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .home-hero-layout {
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+    .home-hero-center {
+        grid-column: 1 / -1;
+        order: 1;
+        margin-bottom: 0.5rem;
+    }
+    .home-sidebar-left {
+        order: 2;
+    }
+    .home-sidebar-right {
+        order: 3;
+    }
+    .sidebar-events-list,
+    .sidebar-news-list {
+        max-height: 550px;
+    }
+}
+
+@media (max-width: 680px) {
+    .home-hero-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    .hero-collage-wrapper {
+        height: 200px;
+    }
+    .hero-main-title {
+        font-size: 1.6rem;
+    }
+    .hero-center-body {
+        padding: 1.5rem 1rem;
+    }
+    .hero-center-stats {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    .hero-stat-sep {
+        display: none;
+    }
+}
+</style>
 
 <?php if (!empty($anuncios)): ?>
 <!-- Ads Carousel Section (Full Width) -->
